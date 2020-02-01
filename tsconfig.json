@@ -1,0 +1,23 @@
+{
+  /*
+    You can add any other Typescript settings below, either by adding them directly,
+    or extending a base configuration file with this one.
+
+    (If you aren't sure what I mean about extending, I would recommend just
+    adding the settings to this file.)
+  */
+  "compilerOptions": {
+    //    Other compiler settings go here
+    "strict": true,
+
+    // -------------------------------------------------------------------------
+    //    if you're adding your own, add them ABOVE the dotted line ^^^
+    //    that way, these will override any we need that you accidentally add.
+
+    "noEmit": false,          // REQUIRED: `"noEmit": false
+    "module": "esnext",       // REQUIRED: "module": "esnext"
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "target": "es6",
+  }
+}
