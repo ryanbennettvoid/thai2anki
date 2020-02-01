@@ -3,6 +3,7 @@ const BPromise = require('bluebird')
 const yargs = require('yargs')
 const fs = require('fs')
 const pdf = require('pdf-parse')
+const mammoth = require('mammoth')
 const isAlpha = require('is-alphanumerical')
 const thaiCut = require('thai-cut-slim')
 const thaiDict = require('thaidict')
@@ -115,6 +116,16 @@ async function buildAnkiDeck(words: string[], filename: string) {
   }
 }
 
+async function getTextFromDocx(filename: string) {
+  try {
+    const result = await mammoth.extractRawText({ path: filename })
+    const text = result.value
+    return text
+  } catch (err) {
+    return Promise.reject(err)
+  }
+}
+
 async function main() {
   try {
 
@@ -133,6 +144,7 @@ async function main() {
         text = await getTextFromPdf(filename)
         break
       case FILE_TYPE_DOCX:
+        text = await getTextFromDocx(filename)
         break
       default:
         throw new Error(`unsupported file type: ${suffix}`)
