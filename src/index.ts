@@ -8,11 +8,15 @@ const isAlpha = require('is-alphanumerical')
 const thaiCut = require('thai-cut-slim')
 const thaiDict = require('thaidict')
 const AnkiExport = require('anki-apkg-export').default
+const cheerio = require('cheerio')
+const nodeFetch = require('node-fetch')
 
 const textFilterRegExp = new RegExp("^(|[0-9]|[/]|[\\]|[ ]|[\n]|[.]|[ๅภถุึคตจขชๆไำพะัีรนยบลฃฟหกดเ้่าสวงผปแอิืทมใฝ๑๒๓๔ู฿๕๖๗๘๙๐ฎฑธํ๊ณฯญฐฅฤฆฏโฌ็๋ษศซฉฮฺ์ฒฬฦ])+$", "g")
 
 const FILE_TYPE_PDF = 'pdf'
 const FILE_TYPE_DOCX = 'docx'
+
+const DECK_WORD_LIMIT = 1000
 
 function getFilenameSuffix(filename: string) : string {
   const suffix: string = (filename.split('.').reverse()[0] || '')
@@ -105,9 +109,9 @@ async function buildAnkiDeck(words: string[], filename: string) {
       const back: string = definition.length > 0 ? definition : '(no definition)'
       apkg.addCard(front, back)
     })
-     
+
     const zip = await apkg.save()
-    const ankiFilename = `${filename}.apkg`
+    const ankiFilename = `${filename.replace(/\W/g, '')}.apkg`
     fs.writeFileSync(ankiFilename, zip, 'binary')
     console.log(`Package has been generated: ${ankiFilename}`)
 
@@ -126,6 +130,17 @@ async function getTextFromDocx(filename: string) {
   }
 }
 
+async function getTextFromUrl(url: string) {
+  try {
+    const res = await nodeFetch(url)
+    const html = await res.text()
+    const $ = cheerio.load(html)
+    return $('html').text()
+  } catch (err) {
+    return Promise.reject(err)
+  }
+}
+
 async function main() {
   try {
 
@@ -135,22 +150,26 @@ async function main() {
       throw new Error(`no file provided`)
     }
 
-    const suffix: string = getFilenameSuffix(filename)
-    
     let text = ''
 
-    switch (suffix) {
-      case FILE_TYPE_PDF:
-        text = await getTextFromPdf(filename)
-        break
-      case FILE_TYPE_DOCX:
-        text = await getTextFromDocx(filename)
-        break
-      default:
-        throw new Error(`unsupported file type: ${suffix}`)
+    const isHtml = filename.startsWith('http://') || filename.startsWith('https://')
+    if (isHtml) {
+      text = await getTextFromUrl(filename)
+    } else {
+      const suffix: string = getFilenameSuffix(filename)
+      switch (suffix) {
+        case FILE_TYPE_PDF:
+          text = await getTextFromPdf(filename)
+          break
+        case FILE_TYPE_DOCX:
+          text = await getTextFromDocx(filename)
+          break
+        default:
+          throw new Error(`unsupported file type: ${suffix}`)
+      }
     }
 
-    const words : string[] = thaiCut.cut(text)
+    const words : string[] = thaiCut.cut(text).slice(0, DECK_WORD_LIMIT)
     await buildAnkiDeck(words, filename)
 
   } catch (err) {
