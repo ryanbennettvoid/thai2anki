@@ -12,9 +12,11 @@
     "@types/node": "^13.5.3",
     "@types/yargs": "^15.0.2",
     "anki-apkg-export": "^4.0.2",
+    "bluebird": "^3.7.2",
     "is-alphanumerical": "^1.0.4",
     "pdf-parse": "^1.1.1",
     "thai-cut-slim": "^1.2.0",
+    "thaidict": "^0.0.2",
     "yargs": "^15.1.0"
   }
 }

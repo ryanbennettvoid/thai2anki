@@ -39,6 +39,10 @@ ansi-styles@^4.0.0:
     "@types/color-name" "^1.1.1"
     color-convert "^2.0.1"
 
+bluebird@^3.7.2:
+  version "3.7.2"
+  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
+
 camelcase@^5.0.0:
   version "5.3.1"
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-5.3.1.tgz#e3c9b31569e106811df242f715725a1f4c494320"
@@ -259,6 +263,10 @@ strip-ansi@^6.0.0:
 thai-cut-slim@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/thai-cut-slim/-/thai-cut-slim-1.2.0.tgz#173fe01f1392406f5b326d8d6622c8aa98d504be"
+
+thaidict@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/thaidict/-/thaidict-0.0.2.tgz#ef9fb1f177b981024df8c26ab3a5cd5479660942"
 
 util-deprecate@~1.0.1:
   version "1.0.2"

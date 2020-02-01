@@ -1,9 +1,11 @@
 
+const BPromise = require('bluebird')
 const yargs = require('yargs')
 const fs = require('fs')
 const pdf = require('pdf-parse')
 const isAlpha = require('is-alphanumerical')
 const thaiCut = require('thai-cut-slim')
+const thaiDict = require('thaidict')
 const AnkiExport = require('anki-apkg-export').default
 
 const textFilterRegExp = new RegExp("^(|[0-9]|[/]|[\\]|[ ]|[\n]|[.]|[ๅภถุึคตจขชๆไำพะัีรนยบลฃฟหกดเ้่าสวงผปแอิืทมใฝ๑๒๓๔ู฿๕๖๗๘๙๐ฎฑธํ๊ณฯญฐฅฤฆฏโฌ็๋ษศซฉฮฺ์ฒฬฦ])+$", "g")
@@ -39,7 +41,7 @@ async function getTextFromPdf(filename: string) : Promise<string> {
 
 async function buildAnkiDeck(words: string[], filename: string) {
   try {
-    const apkg = new AnkiExport('deck-name')
+    const apkg = new AnkiExport(filename)
     
     interface WordCountMap { 
       [key: string]: number
@@ -54,14 +56,52 @@ async function buildAnkiDeck(words: string[], filename: string) {
     }, {} as WordCountMap)
 
     const dedupedWords: string[] = Object.keys(wordCounts)
+
+    interface WordDefinitionMap {
+      [key: string]: string
+    }
+
+    await thaiDict.init()
+    const definitions: WordDefinitionMap = await BPromise.reduce(dedupedWords, async (acc: WordDefinitionMap, word: string) => {
+      try {
+
+        interface Result {
+          search: string
+          result: string
+          type: string
+          synonym: string[]
+          antonym: string[]
+          relate: string[]
+          sample: string
+          tag: string[]
+        }
+
+        const results: Result[] = await thaiDict.search(word)
+        if (results.length === 0) {
+          throw new Error(`no results found for word: ${word}`)
+        }
+        const { type, relate=[] } = results[0]
+        const englishWords = results.map((r: Result) => r.result).join(', ')
+        acc[word] = `[${type}] ${englishWords}`
+        if (relate.length > 0) {
+          acc[word] += ` (${relate.join(', ')})`
+        }
+      } catch (err) {
+        acc[word] = ''
+        // console.error(`error fetching definition for ${word}: `, err.message)
+      }
+      console.log(acc[word])
+      return acc
+    }, {} as WordDefinitionMap)
     
     dedupedWords
     .sort((a: string, b: string) => {
       return wordCounts[b] - wordCounts[a]
     })
     .forEach((thaiWord: string) => {
+      const definition = definitions[thaiWord] || ''
       const front: string = thaiWord
-      const back: string = `count: ${wordCounts[thaiWord]}`
+      const back: string = definition.length > 0 ? definition : '(no definition)'
       apkg.addCard(front, back)
     })
      
